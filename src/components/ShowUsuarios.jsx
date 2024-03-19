@@ -6,37 +6,41 @@ import withReactContent from "sweetalert2-react-content";
 
 const ShowUsuarios = () => {
     const url = 'https://api.escuelajs.co/api/v1/users';
-    const [products, setProducts] = useState([]);
+    const [usuarios, setusuarios] = useState([]);
     const [id, setId] = useState('');
-    const [title, setTitle] = useState('');
+    const [name, setName] = useState('');
     const [role, setRole] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [titleModal, setTitleModal] = useState('');
     const [operation, setOperation] = useState(1);
 
-    const getProductos = async () => {
+    const getUsuarios = async () => {
         const response = await axios.get(url);
-        setProducts(response.data);
+        setusuarios(response.data);
     }
 
     useEffect( () => {
-        getProductos();
+        getUsuarios();
     });
 
-    const openModal = (operation, id, title, role, password) => {
+    const openModal = (operation, id, name, role, password) => {
         setId('');
-        setTitle('');
+        setName('');
         setRole('');
+        setEmail('');
         setPassword('');
+        
 
         if (operation === 1) {
-            setTitleModal('Registrar Producto');
+            setTitleModal('Registrar Usuarios');
             setOperation(1);
         } else if (operation === 2) {
-            setTitleModal('Editar Producto');
+            setTitleModal('Editar Usuarios');
             setId(id);
-            setTitle(title);
+            setName(name);
             setRole(role);
+            setEmail(email);
             setPassword(password);
             setOperation(2);
         }
@@ -56,15 +60,15 @@ const ShowUsuarios = () => {
             let mensaje;
 
             if (metodo === 'POST') {
-                mensaje = 'Se guardó el producto';
+                mensaje = 'Se guardó el usuario';
             } else if (metodo === 'PUT') {
-                mensaje = 'Se editó el producto';
+                mensaje = 'Se editó el usuario';
             } else if (metodo === 'DELETE') {
-                mensaje = 'Se eliminó el producto';
+                mensaje = 'Se eliminó el usuario';
             }
             alertaSuccess(mensaje);
             document.getElementById('btnCerrarModal').click();
-            getProductos();
+            getUsuarios();
         }).catch((error) => {
             alertaError(error.response.data.message);
             console.log(error);
@@ -76,16 +80,20 @@ const ShowUsuarios = () => {
         let metodo;
         let urlAxios;
 
-        if (title === '') {
+        if (name === '') {
             alertaWarning('Escriba el nombre del usuario', 'name');
         } else if (role === '') {
-            alertaWarning('Escriba la descripción del usuario', 'role');
+            alertaWarning('Escriba el rol del usuario', 'role');
+        } else if (email === '') {
+            alertaWarning('Escriba el correo del usuario', 'email');
+        
         } else if (password === '') {
-            alertaWarning('Escriba el precio del usuario', 'password');
+            alertaWarning('Escriba la contraseña del usuario', 'password');
         } else {
             payload = {
-                title: title,
+                name: name,
                 role: role,
+                email: email,
                 password: password,
                 categoryId: 6,
                 images: ['https://c8.alamy.com/compes/r3yw81/el-icono-de-imagen-no-disponible-vector-plana-r3yw81.jpg']
@@ -108,7 +116,7 @@ const ShowUsuarios = () => {
 
         const MySwal = withReactContent(Swal);
         MySwal.fire({
-            title: '¿Está seguro de eliminar el producto?',
+            title: '¿Está seguro de eliminar el usuario?',
             icon: 'question',
             text: 'No habrá marcha atrás',
             showCancelButton: true,
@@ -131,7 +139,7 @@ const ShowUsuarios = () => {
             <div className='rwo mt-3'>
                 <div className='col-md-4 offset-md-4'>
                     <div className='d-grid mx-auto'>
-                        <button onClick={() => openModal(1)} className='btn btn-dark' data-bs-toggle='modal' data-bs-target='#modalProducts'>
+                        <button onClick={() => openModal(1)} className='btn btn-dark' data-bs-toggle='modal' data-bs-target='#modalusuarios'>
                             <i className='fa-solid fa-circle-plus' /> Añadir
                         </button>
                     </div>
@@ -150,24 +158,26 @@ const ShowUsuarios = () => {
                                 <th>Rol</th>
                                 <th>Email</th>
                                 <th>Contraseña</th>
+                                <th>Avatar</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody className='table-group-divider'>
                             {
-                                products.map( (product, i) => (
+                                usuarios.map( (product, i) => (
                                     <tr key={product.id}>
                                         <td>{i + 1}</td>
                                         <td>{product.name}</td>
                                         <td>{product.role}</td>
                                         <td>{product.email}</td>
                                         <td>{product.password}</td>
+                                        <td><img src={product.avatar} width="100" height="100"></img></td>
                                         <td>
-                                            <button onClick={() => openModal(2, product.id, product.name, product.role, product.email, product.password)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalProducts'>
+                                            <button onClick={() => openModal(2, product.id, product.name, product.role, product.email, product.password, product.avatar)} className='btn btn-warning' data-bs-toggle='modal' data-bs-target='#modalusuarios'>
                                                 <i className='fa-solid fa-edit' />
                                             </button>
                                             <button onClick={() => deleteProducto(product.id)} className='btn btn-danger'>
-                                                <i className='fa-solid fa-trash' />
+                                                <i className='fa-solid fa-trash-can' />
                                             </button>
                                         </td>
                                     </tr>
@@ -179,7 +189,7 @@ const ShowUsuarios = () => {
             </div>
         </div>
 
-        <div id='modalProducts' className='modal fade' aria-hidden='true'>
+        <div id='modalusuarios' className='modal fade' aria-hidden='true'>
             <div className='modal-dialog'>
                 <div className='modal-content'>
                     <div className='modal-header'>
@@ -190,15 +200,23 @@ const ShowUsuarios = () => {
                         <input type='hidden' id='id' />
                         <div className='input-group mb-3'>
                             <span className='input-group-text'><i className='fa-solid fa-gift' /></span>
-                            <input type='text' id='title' className='form-control' placeholder='Nombre' value={title} onChange={(e) => setTitle(e.target.value)} />
+                            <input type='text' id='name' className='form-control' placeholder='Nombre' value={name} onChange={(e) => setName(e.target.value)} />
                         </div>
                         <div className='input-group mb-3'>
                             <span className='input-group-text'><i className='fa-solid fa-comment' /></span>
-                            <input type='text' id='role' className='form-control' placeholder='Descripción' value={role} onChange={(e) => setRole(e.target.value)} />
+                            <input type='text' id='role' className='form-control' placeholder='Rol' value={role} onChange={(e) => setRole(e.target.value)} />
                         </div>
+                       
                         <div className='input-group mb-3'>
-                            <span className='input-group-text'><i className='fa-solid fa-dollar-sign' /></span>
-                            <input type='text' id='password' className='form-control' placeholder='Precio' value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <span className='input-group-text'><i className='fa-solid fa-envelope' /></span>
+                            <input type='text' id='email' className='form-control' placeholder='email' value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                       
+                       
+                       
+                        <div className='input-group mb-3'>
+                            <span className='input-group-text'><i className='fa-solid fa-key' /></span>
+                            <input type='text' id='password' className='form-control' placeholder='password' value={password} onChange={(e) => setPassword(e.target.value)} />
                         </div>
                     </div>
                     <div className='modal-footer'>
